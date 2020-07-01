@@ -114,7 +114,7 @@ defmodule Plug.DebuggerTest do
     conn = put_req_header(conn(:get, "/soft_boom"), "accept", "text/html")
 
     capture_log(fn ->
-      assert_raise Exception, fn ->
+      assert_raise Plug.Conn.WrapperError, fn ->
         Router.call(conn, [])
       end
     end)
@@ -134,7 +134,7 @@ defmodule Plug.DebuggerTest do
     conn = put_req_header(conn(:get, "/send_and_boom"), "accept", "text/html")
 
     capture_log(fn ->
-      assert_raise RuntimeError, "oops", fn ->
+      assert_raise Plug.Conn.WrapperError, "** (RuntimeError) oops", fn ->
         Router.call(conn, [])
       end
     end)
@@ -143,7 +143,7 @@ defmodule Plug.DebuggerTest do
     assert {200, _headers, "oops"} = sent_resp(conn)
   end
 
-  test "call/2 is overridden and unwrapps wrapped errors" do
+  test "call/2 is overridden and unwraps wrapped errors" do
     conn = put_req_header(conn(:get, "/send_and_wrapped"), "accept", "text/html")
 
     capture_log(fn ->
@@ -166,7 +166,7 @@ defmodule Plug.DebuggerTest do
     conn = put_req_header(conn(:get, "/nil"), "accept", "text/html")
 
     capture_log(fn ->
-      assert_raise UndefinedFunctionError, fn ->
+      assert_raise Plug.Conn.WrapperError, fn ->
         Router.call(conn, [])
       end
     end)
@@ -322,7 +322,7 @@ defmodule Plug.DebuggerTest do
   test "styles can be overridden" do
     conn = put_req_header(conn(:get, "/boom"), "accept", "text/html")
 
-    assert_raise RuntimeError, fn ->
+    assert_raise Plug.Conn.WrapperError, fn ->
       StyledRouter.call(conn, [])
     end
 
@@ -333,7 +333,7 @@ defmodule Plug.DebuggerTest do
 
   test "custom banners can be rendered" do
     conn = put_req_header(conn(:get, "/boom"), "accept", "text/html")
-    assert_raise RuntimeError, fn -> StyledRouter.call(conn, []) end
+    assert_raise Plug.Conn.WrapperError, fn -> StyledRouter.call(conn, []) end
 
     {_status, _headers, body} = sent_resp(conn)
     assert body =~ "<h1>500, :error, %RuntimeError{message: \"oops\"}</h1>"
@@ -361,7 +361,7 @@ defmodule Plug.DebuggerTest do
       |> put_req_header("accept", "text/html")
       |> Map.put(:secret_key_base, "secret")
 
-    capture_log(fn -> assert_raise(ActionableError, fn -> Router.call(conn, []) end) end)
+    capture_log(fn -> assert_raise(Plug.Conn.WrapperError, fn -> Router.call(conn, []) end) end)
 
     {_status, _headers, body} = sent_resp(conn)
     assert body =~ ~s|action="/__plug__/debugger/action" method="POST"|
@@ -374,7 +374,7 @@ defmodule Plug.DebuggerTest do
       |> put_req_header("accept", "text/html")
       |> Map.put(:secret_key_base, "secret")
 
-    capture_log(fn -> assert_raise(Exception, fn -> Router.call(conn, []) end) end)
+    capture_log(fn -> assert_raise(Plug.Conn.WrapperError, fn -> Router.call(conn, []) end) end)
     {_status, _headers, body} = sent_resp(conn)
 
     refute body =~ ~s|<form action="/__plug__/debugger/action" method="POST">|
@@ -384,7 +384,7 @@ defmodule Plug.DebuggerTest do
     conn = put_req_header(conn(:get, "/actionable_exception"), "accept", "text/html")
 
     capture_log(fn ->
-      assert_raise(ActionableError, fn ->
+      assert_raise(Plug.Conn.WrapperError, fn ->
         Router.call(conn, [])
       end)
     end)
@@ -400,7 +400,7 @@ defmodule Plug.DebuggerTest do
       |> Map.put(:secret_key_base, "secret")
 
     capture_log(fn ->
-      assert_raise(ActionableError, fn ->
+      assert_raise(Plug.Conn.WrapperError, fn ->
         Router.call(conn, [])
       end)
     end)

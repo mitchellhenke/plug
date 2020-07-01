@@ -135,9 +135,11 @@ defmodule Plug.Debugger do
           e in Plug.Conn.WrapperError ->
             %{conn: conn, kind: kind, reason: reason, stack: stack} = e
             Plug.Debugger.__catch__(conn, kind, reason, stack, @plug_debugger)
+            Plug.Conn.WrapperError.reraise(e)
         catch
           kind, reason ->
             Plug.Debugger.__catch__(conn, kind, reason, __STACKTRACE__, @plug_debugger)
+            :erlang.raise(kind, reason, __STACKTRACE__)
         end
       end
     end
@@ -152,12 +154,10 @@ defmodule Plug.Debugger do
       @already_sent ->
         send(self(), @already_sent)
         log(status, kind, reason, stack)
-        :erlang.raise(kind, reason, stack)
     after
       0 ->
         render(conn, status, kind, reason, stack, opts)
         log(status, kind, reason, stack)
-        :erlang.raise(kind, reason, stack)
     end
   end
 
